@@ -2,9 +2,9 @@ resource "proxmox_virtual_environment_file" "ubuntu22_cloud_init" {
   content_type = "snippets"
   datastore_id = local.datastore_id
   node_name    = var.proxmox_node
-  
+
   source_raw {
-    data  = templatefile("./assets/user-data", { ssh_key = tls_private_key.ssh_key.public_key_openssh })
+    data      = templatefile("./assets/user-data", { ssh_key = tls_private_key.ssh_key.public_key_openssh })
     file_name = "ubuntu22.cloud-config.yaml"
   }
 }
@@ -28,9 +28,9 @@ resource "proxmox_virtual_environment_vm" "ubuntu_vm" {
 
   cpu {
     sockets = 1
-    cores = 1
-    type = "host"
-    flags = []
+    cores   = 1
+    type    = "host"
+    flags   = []
   }
 
   memory {

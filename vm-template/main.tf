@@ -1,7 +1,7 @@
 locals {
-  base_vm_id = 1001
+  base_vm_id   = 1001
   packer_vm_id = 101
-  os_type = "l26"
+  os_type      = "l26"
   datastore_id = "local"
 }
 
@@ -11,18 +11,18 @@ resource "tls_private_key" "ssh_key" {
 }
 
 output "private_key" {
-  value = tls_private_key.ssh_key.private_key_pem
+  value     = tls_private_key.ssh_key.private_key_pem
   sensitive = true
 }
 
 output "public_key" {
-  value = tls_private_key.ssh_key.public_key_openssh
+  value     = tls_private_key.ssh_key.public_key_openssh
   sensitive = true
 }
 
 resource "random_password" "password" {
-  length           = 16
-  special          = false
+  length  = 16
+  special = false
 }
 
 resource "proxmox_virtual_environment_file" "ubuntu22_cloud_image" {
@@ -48,9 +48,9 @@ resource "proxmox_virtual_environment_vm" "ubuntu_vm_template" {
 
   cpu {
     sockets = 1
-    cores = 1
-    type = "host"
-    flags = []
+    cores   = 1
+    type    = "host"
+    flags   = []
   }
 
   memory {
@@ -63,7 +63,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_vm_template" {
     interface    = "scsi0"
     size         = 10
   }
-  
+
   initialization {
     datastore_id = local.datastore_id
     ip_config {
@@ -74,7 +74,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_vm_template" {
     user_account {
       username = var.guest_user
       password = random_password.password.result
-      keys = [trimspace(tls_private_key.ssh_key.public_key_openssh)]
+      keys     = [trimspace(tls_private_key.ssh_key.public_key_openssh)]
     }
   }
 
@@ -86,16 +86,16 @@ resource "proxmox_virtual_environment_vm" "ubuntu_vm_template" {
     type = local.os_type
   }
 
-  on_boot = false
-  started = false
-  template = true
+  on_boot       = false
+  started       = false
+  template      = true
   tablet_device = false
 }
 
 resource "local_file" "packer_ssh_key" {
-  filename = "${path.module}/pack/ssh.key"
+  filename        = "${path.module}/pack/ssh.key"
   file_permission = "0600"
-  content = trimspace(tls_private_key.ssh_key.private_key_pem)
+  content         = trimspace(tls_private_key.ssh_key.private_key_pem)
 
   depends_on = [
     proxmox_virtual_environment_file.ubuntu22_cloud_image
@@ -104,19 +104,19 @@ resource "local_file" "packer_ssh_key" {
 
 resource "local_file" "packer_ubuntu_template" {
   filename = "${path.module}/pack/ubuntu.pkr.hcl"
-  content = templatefile("${path.module}/assets/ubuntu.pkr.hcl.tpl", 
-        {
-          ssh_key_path = "${abspath(path.module)}/${local_file.packer_ssh_key.filename}",
-          proxmox_node = var.proxmox_node,
-          proxmox_api_endpoint = var.proxmox_api_endpoint,
-          proxmox_api_user = var.proxmox_api_user,
-          proxmox_api_token = split("=", var.proxmox_api_token)[1],
-          base_vm_id = local.base_vm_id,
-          guest_user = var.guest_user,
-          packer_vm_id = local.packer_vm_id,
-          os_type = local.os_type
-        }
-    )
+  content = templatefile("${path.module}/assets/ubuntu.pkr.hcl.tpl",
+    {
+      ssh_key_path         = "${abspath(path.module)}/${local_file.packer_ssh_key.filename}",
+      proxmox_node         = var.proxmox_node,
+      proxmox_api_endpoint = var.proxmox_api_endpoint,
+      proxmox_api_user     = var.proxmox_api_user,
+      proxmox_api_token    = split("=", var.proxmox_api_token)[1],
+      base_vm_id           = local.base_vm_id,
+      guest_user           = var.guest_user,
+      packer_vm_id         = local.packer_vm_id,
+      os_type              = local.os_type
+    }
+  )
 
   depends_on = [
     local_file.packer_ssh_key
@@ -124,10 +124,10 @@ resource "local_file" "packer_ubuntu_template" {
 }
 
 resource "null_resource" "packer_build" {
-  
+
   provisioner "local-exec" {
     working_dir = "${path.module}/pack"
-    command = "packer init . && packer build ."
+    command     = "packer init . && packer build ."
   }
 
   provisioner "local-exec" {
